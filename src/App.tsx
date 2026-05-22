@@ -151,7 +151,11 @@ export default function App() {
           </div>
         </section>
 
-        {images.length > 0 && (
+        {images.length === 0 ? (
+          <div className="border border-dashed border-slate-700 rounded-2xl p-16 text-center text-slate-500">
+            No images uploaded yet
+          </div>
+        ) : (
           <div
             className="
               grid
