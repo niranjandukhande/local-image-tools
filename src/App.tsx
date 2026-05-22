@@ -9,14 +9,15 @@ import type { ImageItem } from "./types/image";
 
 export default function App() {
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [isConverting, setIsConverting] = useState(false);
 
   async function handleConvertAll() {
-    if (images.length === 0) {
-      alert("No images selected");
+    if (images.length === 0 || isConverting) {
       return;
     }
 
     try {
+      setIsConverting(true);
       const zip = new JSZip();
 
       for (const image of images) {
@@ -34,8 +35,9 @@ export default function App() {
       downloadBlob(zipBlob, "converted-images.zip");
     } catch (error) {
       console.error(error);
-
       alert("Batch conversion failed");
+    } finally {
+      setIsConverting(false);
     }
   }
 
@@ -67,13 +69,17 @@ export default function App() {
   }
 
   async function handleConvert(image: ImageItem) {
+    if (isConverting) return;
     try {
+      setIsConverting(true);
       const blob = await convertImageToPng(image.previewUrl);
       const fileName = image.file.name.replace(/\.jpe?g$/i, "");
       downloadBlob(blob, `${fileName}.png`);
     } catch (error) {
       console.error(error);
       alert("Conversion failed");
+    } finally {
+      setIsConverting(false);
     }
   }
 
@@ -83,7 +89,7 @@ export default function App() {
         URL.revokeObjectURL(image.previewUrl);
       });
     };
-  });
+  }, [images]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-white px-6 py-10">
@@ -103,6 +109,7 @@ export default function App() {
               multiple
               accept="image/jpeg"
               onChange={handleFileChange}
+              disabled={isConverting}
               className="
                 block
                 w-full
@@ -121,12 +128,15 @@ export default function App() {
               "
             />
 
-            {images.length > 0 && (
-              <button
-                onClick={handleConvertAll}
-                className="
+            {/*{images.length > 0 && (*/}
+            <button
+              onClick={handleConvertAll}
+              disabled={images.length === 0 || isConverting}
+              className="
                 bg-emerald-600
                 hover:bg-emerald-700
+                disabled:bg-slate-700
+                disabled:cursor-not-allowed
                 transition
                 px-6
                 py-3
@@ -134,10 +144,10 @@ export default function App() {
                 font-semibold
                 whitespace-nowrap
               "
-              >
-                Convert All & ZIP
-              </button>
-            )}
+            >
+              {isConverting ? "Converting..." : "  Convert All & ZIP"}
+            </button>
+            {/*)}*/}
           </div>
         </section>
 
@@ -180,10 +190,13 @@ export default function App() {
 
                   <button
                     onClick={() => handleConvert(image)}
+                    disabled={isConverting}
                     className="
                       w-full
                       bg-blue-600
                       hover:bg-blue-700
+                      disabled:bg-slate-700
+                      disabled:cursor-not-allowed
                       transition
                       px-4
                       py-3
@@ -191,7 +204,7 @@ export default function App() {
                       font-semibold
                     "
                   >
-                    Convert to PNG
+                    {isConverting ? "Converting..." : "Convert to PNG"}
                   </button>
                 </div>
               </div>
