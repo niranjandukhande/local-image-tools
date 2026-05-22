@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-
 import JSZip from "jszip";
 
+import Header from "./components/Header";
+import UploadSection from "./components/UploadSection";
+import ImageGrid from "./components/ImageGrid";
 import { convertImageToPng } from "./utils/convertImage";
+
 import { downloadBlob } from "./utils/downloadBlob";
 import { validateFiles } from "./utils/fileValidation";
 import type { ImageItem } from "./types/image";
@@ -45,7 +48,6 @@ export default function App() {
     const files = e.target.files;
 
     if (!files) return;
-
     const filesArray = Array.from(files);
     const result = validateFiles(filesArray);
     if (!result.valid) {
@@ -94,127 +96,20 @@ export default function App() {
   return (
     <main className="min-h-screen bg-slate-950 text-white px-6 py-10">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-10">
-          <h1 className="text-5xl font-bold mb-3">JPG to PNG Converter</h1>
+        <Header />
 
-          <p className="text-slate-400">
-            Convert images locally in your browser
-          </p>
-        </header>
+        <UploadSection
+          onFileChange={handleFileChange}
+          onConvertAll={handleConvertAll}
+          isConverting={isConverting}
+          hasImages={images.length > 0}
+        />
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <input
-              type="file"
-              multiple
-              accept="image/jpeg"
-              onChange={handleFileChange}
-              disabled={isConverting}
-              className="
-                block
-                w-full
-                text-sm
-                text-slate-300
-                file:mr-4
-                file:rounded-xl
-                file:border-0
-                file:bg-blue-600
-                file:px-5
-                file:py-3
-                file:text-white
-                file:font-semibold
-                file:cursor-pointer
-                hover:file:bg-blue-700
-              "
-            />
-
-            {/*{images.length > 0 && (*/}
-            <button
-              onClick={handleConvertAll}
-              disabled={images.length === 0 || isConverting}
-              className="
-                bg-emerald-600
-                hover:bg-emerald-700
-                disabled:bg-slate-700
-                disabled:cursor-not-allowed
-                transition
-                px-6
-                py-3
-                rounded-xl
-                font-semibold
-                whitespace-nowrap
-              "
-            >
-              {isConverting ? "Converting..." : "  Convert All & ZIP"}
-            </button>
-            {/*)}*/}
-          </div>
-        </section>
-
-        {images.length === 0 ? (
-          <div className="border border-dashed border-slate-700 rounded-2xl p-16 text-center text-slate-500">
-            No images uploaded yet
-          </div>
-        ) : (
-          <div
-            className="
-              grid
-              grid-cols-1
-              sm:grid-cols-2
-              lg:grid-cols-3
-              xl:grid-cols-4
-              gap-5
-            "
-          >
-            {images.map((image) => (
-              <div
-                key={image.id}
-                className="
-                  border
-                  border-slate-800
-                  rounded-2xl
-                  overflow-hidden
-                  bg-slate-900
-                "
-              >
-                <img
-                  src={image.previewUrl}
-                  alt={image.file.name}
-                  className="
-                    w-full
-                    h-48
-                    object-cover
-                  "
-                />
-
-                <div className="p-4">
-                  <p className="text-slate-300 mb-4 wrap-break-word text-sm">
-                    {image.file.name}
-                  </p>
-
-                  <button
-                    onClick={() => handleConvert(image)}
-                    disabled={isConverting}
-                    className="
-                      w-full
-                      bg-blue-600
-                      hover:bg-blue-700
-                      disabled:bg-slate-700
-                      disabled:cursor-not-allowed
-                      transition
-                      px-4
-                      py-3
-                      rounded-xl
-                      font-semibold
-                    "
-                  >
-                    {isConverting ? "Converting..." : "Convert to PNG"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <ImageGrid
+          images={images}
+          onConvert={handleConvert}
+          isConverting={isConverting}
+        />
       </div>
     </main>
   );
