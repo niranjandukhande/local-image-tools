@@ -1,10 +1,41 @@
 import { useEffect, useState } from "react";
+import JSZip from "jszip";
+
 import { convertImageToPng } from "./utils/convertImage";
 import { downloadBlob } from "./utils/downloadBlob";
 import type { ImageItem } from "./types/image";
 
 export default function App() {
   const [images, setImages] = useState<ImageItem[]>([]);
+
+  async function handleConvertAll() {
+    if (images.length === 0) {
+      alert("No images selected");
+      return;
+    }
+
+    try {
+      const zip = new JSZip();
+
+      for (const image of images) {
+        const blob = await convertImageToPng(image.previewUrl);
+
+        const fileName = image.file.name.replace(/\.jpe?g$/i, "");
+
+        zip.file(`${fileName}.png`, blob);
+      }
+
+      const zipBlob = await zip.generateAsync({
+        type: "blob",
+      });
+
+      downloadBlob(zipBlob, "converted-images.zip");
+    } catch (error) {
+      console.error(error);
+
+      alert("Batch conversion failed");
+    }
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -65,28 +96,48 @@ export default function App() {
         </header>
 
         <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg"
-            onChange={handleFileChange}
-            className="
-              block
-              w-full
-              text-sm
-              text-slate-300
-              file:mr-4
-              file:rounded-xl
-              file:border-0
-              file:bg-blue-600
-              file:px-5
-              file:py-3
-              file:text-white
-              file:font-semibold
-              file:cursor-pointer
-              hover:file:bg-blue-700
-            "
-          />
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg"
+              onChange={handleFileChange}
+              className="
+                block
+                w-full
+                text-sm
+                text-slate-300
+                file:mr-4
+                file:rounded-xl
+                file:border-0
+                file:bg-blue-600
+                file:px-5
+                file:py-3
+                file:text-white
+                file:font-semibold
+                file:cursor-pointer
+                hover:file:bg-blue-700
+              "
+            />
+
+            {images.length > 0 && (
+              <button
+                onClick={handleConvertAll}
+                className="
+                bg-emerald-600
+                hover:bg-emerald-700
+                transition
+                px-6
+                py-3
+                rounded-xl
+                font-semibold
+                whitespace-nowrap
+              "
+              >
+                Convert All & ZIP
+              </button>
+            )}
+          </div>
         </section>
 
         {images.length > 0 && (
