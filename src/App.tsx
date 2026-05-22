@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+
 import JSZip from "jszip";
 
 import { convertImageToPng } from "./utils/convertImage";
 import { downloadBlob } from "./utils/downloadBlob";
+import { validateFiles } from "./utils/fileValidation";
 import type { ImageItem } from "./types/image";
 
 export default function App() {
@@ -41,16 +43,15 @@ export default function App() {
     const files = e.target.files;
 
     if (!files) return;
-    const validFiles = Array.from(files).filter(
-      (file) => file.type === "image/jpeg",
-    );
 
-    if (validFiles.length === 0) {
-      alert("Please upload JPG images");
+    const filesArray = Array.from(files);
+    const result = validateFiles(filesArray);
+    if (!result.valid) {
+      alert(result.message);
       return;
     }
 
-    const imageItems: ImageItem[] = validFiles.map((file) => ({
+    const imageItems: ImageItem[] = filesArray.map((file) => ({
       id: crypto.randomUUID(),
       file,
       previewUrl: URL.createObjectURL(file),
@@ -173,7 +174,7 @@ export default function App() {
                 />
 
                 <div className="p-4">
-                  <p className="text-slate-300 mb-4 break-words text-sm">
+                  <p className="text-slate-300 mb-4 wrap-break-word text-sm">
                     {image.file.name}
                   </p>
 
